@@ -35,19 +35,24 @@ import Virtualization // for getting network interfaces
         #else
         let appGroup = Bundle.main.infoDictionary?["AppGroupIdentifier"] as? String
         let helper = Bundle.main.infoDictionary?["HelperIdentifier"] as? String
-        // default to unsigned sandbox path
+        // Try app group container first (for signed/sandboxed builds)
+        if let appGroup = appGroup, !appGroup.hasPrefix("invalid.") {
+            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
+                return containerURL
+            }
+        }
+        // Try sandbox container path (for unsigned sandboxed builds)
         var parentURL: URL = FileManager.default.homeDirectoryForCurrentUser
         parentURL.deleteLastPathComponent()
         parentURL.deleteLastPathComponent()
         parentURL.appendPathComponent(helper ?? "com.utmapp.QEMUHelper")
         parentURL.appendPathComponent("Data")
         parentURL.appendPathComponent("tmp")
-        if let appGroup = appGroup, !appGroup.hasPrefix("invalid.") {
-            if let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
-                return containerURL
-            }
+        if FileManager.default.fileExists(atPath: parentURL.path) {
+            return parentURL
         }
-        return parentURL
+        // Fallback to temp directory for non-sandboxed builds
+        return FileManager.default.temporaryDirectory
         #endif
     }
     

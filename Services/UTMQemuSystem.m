@@ -19,6 +19,12 @@
 #import "UTMLogging.h"
 #import "UTMQemuSystem.h"
 
+// Define qemu_main global for QEMU shared library to reference
+// QEMU's SDL2 code sets this to NULL to indicate main loop should run on main thread
+// Must be exported so dlopen'd libraries can find it
+__attribute__((visibility("default"))) __attribute__((used))
+int (*qemu_main)(void) = NULL;
+
 @interface UTMQemuSystem ()
 
 @property (nonatomic) NSString *architecture;

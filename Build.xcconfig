@@ -20,6 +20,11 @@
 MARKETING_VERSION = 5.0.1
 CURRENT_PROJECT_VERSION = 120
 
+// Build for arm64 only (we only have arm64 sysroot)
+ARCHS = arm64
+VALID_ARCHS = arm64
+ONLY_ACTIVE_ARCH = NO
+
 // Codesigning settings defined optionally, see Documentation/iOSDevelopment.md
 #include? "CodeSigning.xcconfig"
 

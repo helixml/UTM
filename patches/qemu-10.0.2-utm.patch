@@ -5011,3 +5011,26 @@ diff --git a/meson.build b/meson.build
  elif host_os == 'sunos'
    socket = [cc.find_library('socket'),
              cc.find_library('nsl'),
+
+From: Helix Build Fix <helix@helixml.dev>
+Date: Mon, 3 Feb 2026 08:00:00 -0800
+Subject: [PATCH] Guard qemu_main reference in SDL2 for shared library builds
+
+When QEMU is built as a shared library (for UTM), the qemu_main variable
+is defined in the host application, not in the shared library. The
+reference to qemu_main in sdl2.c causes an undefined symbol error when
+the shared library is loaded. Guard this with CONFIG_SHARED_LIBRARY_BUILD.
+
+diff --git a/ui/sdl2.c b/ui/sdl2.c
+--- a/ui/sdl2.c
++++ b/ui/sdl2.c
+@@ -942,7 +942,9 @@ static void sdl2_display_init(DisplayState *ds, DisplayOptions *o)
+     atexit(sdl_cleanup);
+ 
+     /* SDL's event polling (in dpy_refresh) must happen on the main thread. */
++#ifndef CONFIG_SHARED_LIBRARY_BUILD
+     qemu_main = NULL;
++#endif
+ }
+ 
+ static QemuDisplay qemu_display_sdl2 = {

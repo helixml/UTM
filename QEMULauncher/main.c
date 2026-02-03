@@ -19,6 +19,12 @@
 
 extern const char **environ;
 
+// Define qemu_main global for QEMU shared library to reference
+// QEMU's SDL2 code sets this to NULL to indicate main loop should run on main thread
+// Must be exported so dlopen'd libraries can find it in flat namespace
+__attribute__((visibility("default"))) __attribute__((used))
+int (*qemu_main)(void) = NULL;
+
 int main(int argc, const char * argv[]) {
     if (argc < 2) {
         fprintf(stderr, "usage: QEMULauncher dylibPath qemuArguments...\n");
