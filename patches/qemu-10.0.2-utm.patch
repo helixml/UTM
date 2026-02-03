@@ -4965,3 +4965,49 @@ index 482768baa6..13bc8921b3 100644
 -- 
 2.41.0
 
+
+From: Helix Build Fix <helix@helixml.dev>
+Date: Sun, 2 Feb 2026 22:00:00 -0800
+Subject: [PATCH] Fix sdl2-gl.c backing_borrow error in UTM tarball
+
+The UTM tarball has a broken sdl2-gl.c that has the new function signature
+but still has the old backing_borrow() call. This patch removes the
+vestigial backing_borrow call.
+
+diff --git a/ui/sdl2-gl.c b/ui/sdl2-gl.c
+--- a/ui/sdl2-gl.c
++++ b/ui/sdl2-gl.c
+@@ -212,10 +212,6 @@ void sdl2_gl_scanout_texture(DisplayChangeListener *dcl,
+ 
+     assert(scon->opengl);
+ 
+-    GLuint backing_texture = backing_borrow(backing_id, &backing_y_0_top,
+-                                            &backing_width, &backing_height,
+-                                            &d3d_tex2d);
+-
+     scon->x = x;
+     scon->y = y;
+     scon->w = w;
+
+From: Helix Build Fix <helix@helixml.dev>
+Date: Sun, 2 Feb 2026 22:30:00 -0800
+Subject: [PATCH] Add -undefined dynamic_lookup for macOS shared library builds
+
+The shared libraries reference qemu_main which is defined in the main
+executable. On macOS, we need -undefined dynamic_lookup to allow this
+symbol to be resolved at runtime.
+
+diff --git a/meson.build b/meson.build
+--- a/meson.build
++++ b/meson.build
+@@ -864,6 +864,10 @@ elif host_os == 'darwin'
+                    required: get_option('pvg'))
+   metal = dependency('appleframeworks', modules: 'Metal', required: false)
+   quartzcore = dependency('appleframeworks', modules: ['OpenGL', 'QuartzCore'], required: false)
++  # Allow shared libraries to reference symbols from the main executable
++  if get_option('shared_lib')
++    emulator_link_args += ['-Wl,-undefined,dynamic_lookup']
++  endif
+ elif host_os == 'sunos'
+   socket = [cc.find_library('socket'),
+             cc.find_library('nsl'),
